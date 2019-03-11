@@ -1,0 +1,12 @@
+p {
+  padding: 1rem;
+  font-weight: bold;
+}
+
+input {
+  text-align: center;
+}
+
+small {
+  margin-bottom: 1rem;
+}

@@ -17,6 +17,11 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
+    "paths": {
+      "logger": [
+        "projects/logger/src/public_api.ts"
+      ]
+    }
   }
 }

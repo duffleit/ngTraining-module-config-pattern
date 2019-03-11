@@ -1,27 +1,125 @@
-# NgTrainingModuleConfigPattern
+# Module-Config pattern
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.3.5.
+This exercise shows you how to make use of the module-config pattern.
 
-## Development server
+_This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 7.3.5._
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+## Boilerplate:
 
-## Code scaffolding
+A project which contains a library and an app is already created for the sake of this exercise. The app represents a simple `cockpit` and the library is a simple `logger` which can log messages. The `cockpit` uses the `logger` to log messages. 
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+```
+ng new ngTraining-module-config-pattern --create-application=false
+cd ngTraining-module-config-pattern
+ng g lib logger
+# add a simple logger service which is provided on root-scope
+ng g app cockpit
+# import and use the logger
+```
 
-## Build
+## Tasks: 
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+1. The logger should be configurable by a profile to log on `window.alert()` or on `console.log`. This configuration should be performed during import. 
 
-## Running unit tests
+```
+imports: [BrowserModule, FormsModule, LoggerModule.withProfile('console')],
+```
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+2. Create a static method `withProfile(profile: string): ModuleWithProviders<LoggerModule>` in the `LoggerModule` which should later provide the `LoggerService`. 
 
-## Running end-to-end tests
+```
+export type LoggerProfile = 'console' | 'window';
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+@NgModule({})
+export class LoggerModule {
+  static withProfile(config: LoggerProfile): ModuleWithProviders<LoggerModule> {
+    return {
+      ngModule: LoggerModule,
+      providers: []
+    };
+  }
+}
+```
 
-## Further help
+3. Provide the config as Injection token to provide it later to the `LoggerService`.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+```
+const LOGGER_CONFIG = new InjectionToken<void>('LOGGER_CONFIG');
+
+@NgModule({})
+export class LoggerModule {
+    ...
+      providers: [
+        {
+          provide: LOGGER_CONFIG,
+          useValue: profile
+        },
+    ...
+```
+
+4. Provide the `LoggerService` by creating it via the `useFactory`-approach. Pass the `profile` as a dependency. Extend the `LoggerService`-constructor to accept a profile.
+
+```
+@NgModule({})
+export class LoggerModule {
+    ...
+      providers: [
+        {
+          provide: LoggerService,
+          useFactory: createLoggerService,
+          deps: [LOGGER_CONFIG]
+        }
+}
+
+export function createLoggerService(profile: LoggerProfile) {
+  return new LoggerService(profile);
+}
+```
+
+5. Extend the `LoggerService` to act correctly based on a given profile.
+
+6. The Logger should print a `console.log` on application-startup to show which profile is used. This can be achieved by extending the `APP_INITIALIZER` token. 
+
+```
+@NgModule({})
+export class LoggerModule {
+    ...
+        {
+          provide: APP_INITIALIZER,
+          multi: true,
+          useFactory: initializeLogger,
+          deps: [LOGGER_CONFIG]
+        }
+    ...
+}
+
+export function initializeLogger(profile: LoggerProfile) {
+  return () =>
+    console.log('[logger] was initialized with profile: ' + profile);
+}
+```
+
+7. The Logger should receive some data from a backend-system on application-startup. Check how this long-running request impacts the page-loading.
+
+```
+@NgModule({})
+export class LoggerModule {
+    ...
+        {
+          provide: APP_INITIALIZER,
+          multi: true,
+          useFactory: sendLogEventToBackend,
+          deps: [LOGGER_CONFIG]
+        }
+    ...
+}
+
+export function sendLogEventToBackend(profile: LoggerProfile) {
+  return () =>
+    fetch('https://reqres.in/api/users?delay=3').then(() =>
+      console.log('[logger] sent log event to backend')
+    );
+}
+```
+
+8. Find a solution to run the fetch-call by the `APP_INITIALIZER`-token without blocking the application-bootstrapping.

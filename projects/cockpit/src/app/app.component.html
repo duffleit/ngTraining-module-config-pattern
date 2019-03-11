@@ -1,0 +1,21 @@
+<!--The content below is only a placeholder and can be replaced.-->
+<div style="text-align:center">
+  <h1>
+    Welcome to the CockPit!
+  </h1>
+</div>
+<p>It is not really powerful, but at least it allows you to trigger a log.</p>
+<div class="form-group">
+  <input
+    [(ngModel)]="logMessage"
+    id="logMessageInput"
+    class="form-control"
+    placeholder="Enter the message you want to log"
+  />
+  <small class="form-text text-muted">
+    We'll never share your log-message with anyone else.
+  </small>
+  <button type="button" class="btn btn-primary" (click)="createLog()">
+    Create a log
+  </button>
+</div>
