@@ -6,15 +6,9 @@ import { AppComponent } from './app.component';
 import { LoggerModule } from 'logger';
 
 @NgModule({
-  declarations: [
-    AppComponent
-  ],
-  imports: [
-    BrowserModule,
-    FormsModule,
-    LoggerModule
-  ],
+  declarations: [AppComponent],
+  imports: [BrowserModule, FormsModule, LoggerModule.withProfile('window')],
   providers: [],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {}
